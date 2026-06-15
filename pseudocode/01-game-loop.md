@@ -6,6 +6,8 @@
 ON _ready():
   LOAD game_config from local file (balls_per_game, resolution, active_table_id)
   LOAD table_config from Supabase via load_table_config(game_config.active_table_id)
+  LOAD input_adapter via load_input_config("config/input.json")
+  CALL InputManager.set_adapter(input_adapter)
   INITIALIZE physics world (Godot handles gravity via RigidBody2D)
   INITIALIZE ball (RigidBody2D) at table_config.launch_position
   INITIALIZE flipper_left  (AnimatableBody2D) with table_config.flippers[LEFT]

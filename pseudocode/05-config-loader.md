@@ -14,7 +14,7 @@ FUNCTION load_table_config(table_id) -> TableConfig:
   FETCH table record from Supabase WHERE id = table_id
   PARSE layout JSON:
     bumpers[]  -> { position, radius, score_value }
-    targets[]  -> { position, width, height, score_value }
+    targets[]  -> { position, width, height, score_value, active }  # active = default/reset state
     flippers[] -> { side, pivot, length, angle_rest, angle_active }
     walls[]    -> { start_point, end_point }
     launch_position -> { x, y }

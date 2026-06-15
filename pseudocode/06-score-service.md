@@ -6,6 +6,7 @@
 FUNCTION post_score(player_initials, score, table_id):
   # player_initials: 3-character string entered by player at GAME_OVER
   # Triggered by on_initials_confirmed() in GameLoop — never called directly from render loop
+  # `created_at` is NOT included in payload — DB column has DEFAULT now() and auto-populates
   VALIDATE player_initials (non-empty, max 3 chars, alphanumeric)
   PAYLOAD = { player_initials, score, table_id, played_at: now() }
   POST to Supabase `scores` table

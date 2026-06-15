@@ -11,7 +11,7 @@
 | description(text)|         | player_initials  |
 | layout (jsonb)   |         | score (int)      |
 | is_active (bool) |         | played_at(tstz)  |
-| created_at(tstz) |         | created_at(tstz) |
+| created_at(tstz) |         | created_at(tstz) DEFAULT now()|
 +------------------+         +------------------+
 
 +------------------+
@@ -45,15 +45,15 @@ Stores pinball table configurations. The `layout` JSONB column holds all spatial
 }
 ```
 
-> **Note on `targets[].active`:** This field is persisted in the JSONB layout as the default/reset state for each target. At runtime, `active` is also managed as in-engine state (toggled on hit); it is re-loaded from this config on each new ball or game reset.
+> **Note on `targets[].active`:** This field is persisted in the JSONB layout as the default/reset state for each target. At runtime, `active` is also managed as in-engine state (toggled on hit); it is re-loaded from this config on each new ball or game reset. `load_table_config()` must parse and include this field.
 
 > **Note on `bumper.hit_animation_active`:** This is a purely runtime, in-memory field managed by the Godot physics engine. It is not persisted to the database.
 
 ### `scores`
-Persists every completed game. Linked to a table via `table_id`. Used to render leaderboards.
+Persists every completed game. Linked to a table via `table_id`. Used to render leaderboards. `created_at` has `DEFAULT now()` — do not include it in INSERT payloads from the game client.
 
 ### `project_files`
-Internal catalog table — tracks all files in the repository with type and milestone tags.
+Internal catalog table — tracks all files in the repository with type and milestone tags. **Population strategy: seeded via a migration script, updated manually or via CI whenever new source files are added.** Not read or written by the game client at runtime.
 
 ---
 
