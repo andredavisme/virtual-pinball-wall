@@ -13,21 +13,28 @@ NODE Ball (RigidBody2D):
   linear_damp = 0.1    # slight air resistance
 
   ON _ready():
-    CONNECT Area2D.body_entered signals from bumpers, targets, drain
+    # Signals connected by GameLoop, not self
+    # DrainZone and Bumpers connect via body_entered(body)
 ```
 
 ### Flipper Node: `AnimatableBody2D`
 ```
 NODE Flipper (AnimatableBody2D):
   SHAPE: CapsuleShape2D or custom polygon (flipper profile)
-  REST_ANGLE   = -30 degrees (down position)
-  ACTIVE_ANGLE = +30 degrees (up position)
+  # Angles loaded from TableConfig at game start — not hardcoded
+  rest_angle:   float  # e.g. -30 degrees (down position)
+  active_angle: float  # e.g. +30 degrees (up position)
+
+  FUNCTION init(flipper_config):
+    rest_angle   = flipper_config.angle_rest
+    active_angle = flipper_config.angle_active
+    rotation     = rest_angle
 
   FUNCTION activate():
-    TWEEN rotation from REST_ANGLE to ACTIVE_ANGLE over 0.08s
+    TWEEN rotation from rest_angle to active_angle over 0.08s
 
   FUNCTION release():
-    TWEEN rotation from ACTIVE_ANGLE to REST_ANGLE over 0.12s
+    TWEEN rotation from active_angle to rest_angle over 0.12s
 ```
 
 ### Bumper Node: `Area2D`
@@ -35,27 +42,32 @@ NODE Flipper (AnimatableBody2D):
 NODE Bumper (Area2D):
   SHAPE: CircleShape2D
   BOUNCE_FORCE = 400  # impulse magnitude (tune per feel)
+  score_value: int    # loaded from TableConfig
 
-  ON body_entered(ball):
-    direction = (ball.global_position - self.global_position).normalized()
-    ball.apply_central_impulse(direction * BOUNCE_FORCE)
-    EMIT signal: bumper_hit(points_value)
-    PLAY bumper animation + sound
+  ON body_entered(body):
+    # `body` is the object that entered — must verify it is the Ball
+    IF body is RigidBody2D AND body.is_in_group("ball"):
+      direction = (body.global_position - self.global_position).normalized()
+      body.apply_central_impulse(direction * BOUNCE_FORCE)
+      EMIT signal: bumper_hit(score_value)
+      PLAY bumper animation + sound
 ```
 
 ### Drain Zone: `Area2D`
 ```
 NODE DrainZone (Area2D):
   SHAPE: RectangleShape2D (full width, bottom of table)
+  # drain_y position loaded from TableConfig
 
-  ON body_entered(ball):
-    EMIT signal: ball_drained
-    REMOVE ball from scene or teleport to launch position
+  ON body_entered(body):
+    IF body is RigidBody2D AND body.is_in_group("ball"):
+      EMIT signal: ball_drained
+      HIDE ball (GameLoop handles respawn or game over)
 ```
 
 ### Walls / Table Boundary
 ```
 NODE TableBounds (StaticBody2D):
-  SHAPE: Polygon2D tracing table outline
+  SHAPE: Polygon2D tracing table outline  # coordinates from TableConfig.walls[]
   PHYSICS MATERIAL: bounce = 0.4, friction = 0.1
 ```

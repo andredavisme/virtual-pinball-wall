@@ -4,52 +4,63 @@
 
 ```
 ON _ready():
-  LOAD table config from Supabase or local JSON
+  LOAD game_config from local file (balls_per_game, resolution, active_table_id)
+  LOAD table_config from Supabase via load_table_config(game_config.active_table_id)
   INITIALIZE physics world (Godot handles gravity via RigidBody2D)
-  INITIALIZE ball (RigidBody2D) at launch position
-  INITIALIZE flippers (AnimatableBody2D x2)
-  INITIALIZE bumpers/targets (Area2D + CollisionShape2D)
+  INITIALIZE ball (RigidBody2D) at table_config.launch_position
+  INITIALIZE flipper_left  (AnimatableBody2D) with table_config.flippers[LEFT]
+  INITIALIZE flipper_right (AnimatableBody2D) with table_config.flippers[RIGHT]
+  INITIALIZE bumpers/targets (Area2D) from table_config.bumpers / table_config.targets
   CONNECT InputAdapter signals
+  SET balls_remaining = game_config.balls_per_game
+  SET current_score = 0
   SET game_state = ATTRACT
   CALL show_attract_screen()
 
 ON _physics_process(delta):
-  READ InputEvent from active InputAdapter
+  READ input_event from InputManager.get_event()
 
   MATCH game_state:
 
     ATTRACT:
-      IF InputEvent == LAUNCH:
+      IF input_event == LAUNCH:
         SET game_state = PLAYING
         CALL launch_ball()
 
     PLAYING:
-      IF InputEvent == LEFT_FLIPPER_DOWN:  CALL flipper_left.activate()
-      IF InputEvent == LEFT_FLIPPER_UP:    CALL flipper_left.release()
-      IF InputEvent == RIGHT_FLIPPER_DOWN: CALL flipper_right.activate()
-      IF InputEvent == RIGHT_FLIPPER_UP:   CALL flipper_right.release()
-      IF InputEvent == TILT:               CALL trigger_tilt()
-      IF InputEvent == PAUSE:              SET game_state = PAUSED
-
-      # Physics update handled automatically by Godot engine each tick
+      IF input_event == LEFT_FLIPPER_DOWN:  CALL flipper_left.activate()
+      IF input_event == LEFT_FLIPPER_UP:    CALL flipper_left.release()
+      IF input_event == RIGHT_FLIPPER_DOWN: CALL flipper_right.activate()
+      IF input_event == RIGHT_FLIPPER_UP:   CALL flipper_right.release()
+      IF input_event == TILT:               CALL trigger_tilt()
+      IF input_event == PAUSE:              SET game_state = PAUSED
+      # Physics update handled automatically by Godot each tick
       # Collision signals emitted by Area2D nodes (bumpers, drain, targets)
 
-      IF drain_zone.body_entered(ball):
-        DECREMENT balls_remaining
-        IF balls_remaining == 0:
-          SET game_state = GAME_OVER
-          CALL post_score_to_supabase(current_score)
-        ELSE:
-          CALL reset_ball_to_launch_position()
-
     PAUSED:
-      IF InputEvent == PAUSE: SET game_state = PLAYING
+      IF input_event == PAUSE: SET game_state = PLAYING
 
     GAME_OVER:
-      CALL show_leaderboard()
-      IF InputEvent == any:
+      # Initials entry handled by UI overlay (non-blocking)
+      # Score POST triggered after initials confirmed
+      IF input_event == any AND initials_confirmed:
         CALL reset_game()
         SET game_state = ATTRACT
+
+FUNCTION on_ball_drained():
+  # Connected to DrainZone.ball_drained signal
+  DECREMENT balls_remaining
+  IF balls_remaining == 0:
+    SET game_state = GAME_OVER
+    CALL fetch_and_cache_leaderboard(game_config.active_table_id)
+    CALL show_initials_prompt()  # non-blocking UI overlay
+  ELSE:
+    CALL reset_ball_to_launch_position()
+
+FUNCTION on_initials_confirmed(player_initials):
+  # Triggered by initials UI overlay on confirm
+  SET initials_confirmed = true
+  CALL post_score(player_initials, current_score, game_config.active_table_id)
 
 # Godot renders each frame automatically via SceneTree
 # No manual SLEEP or RENDER call needed
