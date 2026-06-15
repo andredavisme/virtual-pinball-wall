@@ -1,0 +1,5 @@
+; Godot Scene: Main entry point
+; Attaches: src/GameLoop.gd
+; Children: TableScene, UILayer, InputManager
+; TODO: Build scene tree in Godot editor
+[gd_scene format=3]

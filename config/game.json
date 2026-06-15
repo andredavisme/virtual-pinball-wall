@@ -1,0 +1,5 @@
+{
+  "balls_per_game": 3,
+  "target_display_resolution": "1080x1920",
+  "active_table_id": "default"
+}

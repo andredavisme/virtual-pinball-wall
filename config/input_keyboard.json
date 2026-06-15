@@ -1,0 +1,10 @@
+{
+  "adapter_type": "keyboard",
+  "keymap": {
+    "shift_left":  "LEFT_FLIPPER_DOWN",
+    "shift_right": "RIGHT_FLIPPER_DOWN",
+    "space":       "LAUNCH",
+    "escape":      "PAUSE",
+    "t":           "TILT"
+  }
+}

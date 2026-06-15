@@ -1,0 +1,4 @@
+; Godot Scene: Table
+; Contains: Ball, FlipperLeft, FlipperRight, Bumpers, Targets, Walls, DrainZone
+; TODO: Build scene tree in Godot editor
+[gd_scene format=3]
