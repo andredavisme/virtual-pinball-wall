@@ -31,7 +31,7 @@ This file is the canonical handoff document. At the start of any new session, re
 | 8 | Create testing scripts & run them | ✅ Done | 2026-06-15 Session 1 |
 
 > **All 8 Space instruction steps complete as of 2026-06-15.**
-> Next work phase is Godot editor tasks (see “What Comes Next” below).
+> Next work phase is Godot editor tasks — follow `docs/godot-setup-guide.md`.
 
 ---
 
@@ -48,6 +48,12 @@ This file is the canonical handoff document. At the start of any new session, re
 - Created unit test suites under `tests/suites/` and integration scripts under `tests/integration/`
 - Ran `run_db_tests.py` against live Supabase — **6/6 tests passed**
 - Created `PROGRESS.md` (this file) for session handoff tracking
+
+### Session 2 — 2026-06-15
+- Created `docs/godot-setup-guide.md` — full beginner-friendly, step-by-step Godot 4 editor walkthrough
+- Guide covers: project import, AutoLoad registration, display config (1080×1920 portrait), InputMap setup, Main scene construction, main scene assignment, smoke test execution, and full game run
+- Includes 8 checkpoints and troubleshooting sections for each major step
+- Updated `PROGRESS.md` (this file)
 
 ---
 
@@ -90,6 +96,13 @@ This file is the canonical handoff document. At the start of any new session, re
 | `tests/integration/test_game_loop_smoke.gd` | Scene instantiation + state machine simulation |
 | `tests/integration/run_db_tests.py` | Standalone Python runner (no Godot required) |
 
+### Documentation (`docs/`)
+| File | Notes |
+|---|---|
+| `docs/godot-setup-guide.md` | Beginner-friendly Godot 4 editor setup guide with 8 checkpoints |
+| `docs/file-catalog.md` | Project file catalog |
+| `docs/milestones.md` | Project milestones |
+
 ### Database (Supabase — project: `hhyhulqngdkwsxhymmcd`)
 | Table | Status |
 |---|---|
@@ -118,7 +131,7 @@ This file is the canonical handoff document. At the start of any new session, re
 
 ## What Comes Next
 
-All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine):
+All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine). Follow `docs/godot-setup-guide.md` for step-by-step instructions.
 
 ### 1. Register AutoLoads
 Project Settings > AutoLoad — add in this order:
@@ -138,24 +151,7 @@ SupabaseClient.configure(cfg.get("supabase_url", ""), cfg.get("supabase_key", ""
 ```
 
 ### 3. Build `res://scenes/Main.tscn`
-Scene tree structure:
-```
-Node (GameLoop.gd)
-├── Ball               (RigidBody2D + Ball.gd)
-├── FlipperLeft        (AnimatableBody2D + Flipper.gd)
-├── FlipperRight       (AnimatableBody2D + Flipper.gd)
-├── DrainZone          (Area2D + DrainZone.gd)
-├── Bumper_1..N        (Area2D + Bumper.gd)
-├── Target_1..N        (Area2D + Target.gd)
-├── TableBounds        (StaticBody2D + TableBounds.gd)
-└── UIRenderer         (CanvasLayer + UIRenderer.gd)
-    ├── HUD/ScoreLabel
-    ├── HUD/BallCountLabel
-    ├── PauseOverlay
-    ├── GameOverOverlay/LeaderboardTable
-    ├── AttractScreen/HighScoreLabel
-    └── InitialsPrompt
-```
+See `docs/godot-setup-guide.md` Part 5 for the full scene tree.
 
 ### 4. Configure Project Settings
 - **InputMap:** add actions `flip_left`, `flip_right`, `launch`, `pause`, `tilt`
@@ -186,6 +182,7 @@ python tests/integration/run_db_tests.py \
 
 - **Repo:** https://github.com/andredavisme/virtual-pinball-wall
 - **Supabase project:** https://supabase.com/dashboard/project/hhyhulqngdkwsxhymmcd
+- **Godot setup guide:** `docs/godot-setup-guide.md`
 - **Pseudocode:** `pseudocode/01-game-loop.md` through `06-score-service.md`
 - **Schema map:** `db/` directory
 - **Supabase URL:** `https://hhyhulqngdkwsxhymmcd.supabase.co`
