@@ -34,7 +34,7 @@ Stores pinball table configurations. The `layout` JSONB column holds all spatial
 ```json
 {
   "bumpers": [{"x": 200, "y": 400, "radius": 30, "score_value": 100}],
-  "targets": [{"x": 150, "y": 600, "width": 40, "height": 10, "score_value": 50}],
+  "targets": [{"x": 150, "y": 600, "width": 40, "height": 10, "score_value": 50, "active": true}],
   "flippers": [
     {"side": "LEFT", "pivot": {"x": 180, "y": 1800}, "length": 120, "angle_rest": -30, "angle_active": 30},
     {"side": "RIGHT", "pivot": {"x": 540, "y": 1800}, "length": 120, "angle_rest": 30, "angle_active": -30}
@@ -45,6 +45,10 @@ Stores pinball table configurations. The `layout` JSONB column holds all spatial
 }
 ```
 
+> **Note on `targets[].active`:** This field is persisted in the JSONB layout as the default/reset state for each target. At runtime, `active` is also managed as in-engine state (toggled on hit); it is re-loaded from this config on each new ball or game reset.
+
+> **Note on `bumper.hit_animation_active`:** This is a purely runtime, in-memory field managed by the Godot physics engine. It is not persisted to the database.
+
 ### `scores`
 Persists every completed game. Linked to a table via `table_id`. Used to render leaderboards.
 
@@ -53,10 +57,22 @@ Internal catalog table — tracks all files in the repository with type and mile
 
 ---
 
-## Planned Migrations
+## Local Config Files (Not in Supabase)
 
-| # | Migration Name | Description |
-|---|----------------|-------------|
-| 1 | `create_project_files_catalog` | ✅ Done — project file index |
-| 2 | `create_tables` | Pinball table configs with JSONB layout |
-| 3 | `create_scores` | Game scores with FK to tables |
+The following game settings are stored in `config/game.json` and loaded by `ConfigLoader.load_game_config()`. They are intentionally local (not database-driven) as they are environment/hardware-specific:
+
+| Field | Default | Description |
+|---|---|---|
+| `balls_per_game` | 3 | Number of balls per game session |
+| `target_display_resolution` | 1080×1920 | Portrait resolution of the wall-mounted display |
+| `active_table_id` | (uuid) | FK reference to `tables.id` — determines which table config is loaded from Supabase |
+
+---
+
+## Migrations
+
+| # | Migration Name | Description | Status |
+|---|----------------|-------------|--------|
+| 1 | `create_project_files_catalog` | Project file index | ✅ Done (2026-06-15) |
+| 2 | `create_tables` | Pinball table configs with JSONB layout | ✅ Done (2026-06-15) |
+| 3 | `create_scores` | Game scores with FK to tables | ✅ Done (2026-06-15) |
