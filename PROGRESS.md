@@ -21,16 +21,33 @@ This file is the canonical handoff document. At the start of any new session, re
 
 | # | Step | Status | Completed |
 |---|---|---|---|
-| 1 | Review design repository objectives | ✅ Done | Session 1 |
-| 2 | Review pseudocode files | ✅ Done | Session 1 |
-| 3 | Review data schema map | ✅ Done | Session 1 |
-| 4 | Cross-check resources for consistency & feasibility | ✅ Done | Session 1 |
-| 5 | Create testing environment (test runner + suites) | ✅ Done | Session 1 |
-| 6 | Create databases per schema map | ✅ Done | Session 1 |
-| 7 | Create code files per pseudocode | ✅ Done | Session 1 |
-| 8 | Create testing scripts & run them | ✅ Done | Session 1 |
+| 1 | Review design repository objectives | ✅ Done | 2026-06-15 Session 1 |
+| 2 | Review pseudocode files | ✅ Done | 2026-06-15 Session 1 |
+| 3 | Review data schema map | ✅ Done | 2026-06-15 Session 1 |
+| 4 | Cross-check resources for consistency & feasibility | ✅ Done | 2026-06-15 Session 1 |
+| 5 | Create testing environment (test runner + suites) | ✅ Done | 2026-06-15 Session 1 |
+| 6 | Create databases per schema map | ✅ Done | 2026-06-15 Session 1 |
+| 7 | Create code files per pseudocode | ✅ Done | 2026-06-15 Session 1 |
+| 8 | Create testing scripts & run them | ✅ Done | 2026-06-15 Session 1 |
 
-> **All 8 steps complete as of 2026-06-15.**
+> **All 8 Space instruction steps complete as of 2026-06-15.**
+> Next work phase is Godot editor tasks (see “What Comes Next” below).
+
+---
+
+## Session Log
+
+### Session 1 — 2026-06-15
+- Reviewed design objectives, pseudocode (6 files), and schema map
+- Cross-checked pseudocode ↔ schema ↔ design for consistency; no blocking conflicts found
+- Created Supabase DB tables: `tables`, `scores`, `test_log`
+- Applied RLS policies: anon SELECT on `tables`; anon INSERT/SELECT/DELETE on `scores`; anon INSERT/SELECT on `test_log`
+- Seeded "Classic Wall Table" into `public.tables` (UUID: `29bf4788-e1c3-4b62-9caf-fc2dfb33456f`)
+- Created all 16 source code files under `src/` and `config/`
+- Wired `config/game.json` with live Supabase URL, publishable key, and active table UUID
+- Created unit test suites under `tests/suites/` and integration scripts under `tests/integration/`
+- Ran `run_db_tests.py` against live Supabase — **6/6 tests passed**
+- Created `PROGRESS.md` (this file) for session handoff tracking
 
 ---
 
@@ -87,58 +104,81 @@ This file is the canonical handoff document. At the start of any new session, re
 - `scores`: anon INSERT, SELECT, DELETE
 - `test_log`: anon INSERT, SELECT (pre-existing)
 
-### Integration Test Results (last run: 2026-06-15)
-| Test | Result |
-|---|---|
-| `tables_row_exists` | ✅ pass |
-| `layout_shape` | ✅ pass |
-| `score_insert` | ✅ pass |
-| `score_fk_constraint` | ✅ pass |
-| `leaderboard_sort` | ✅ pass |
-| `test_log_insert` | ✅ pass |
+### Integration Test Results (last run: 2026-06-15 ~15:38 EDT)
+| Test | Suite | Result |
+|---|---|---|
+| `tables_row_exists` | DBLive | ✅ pass |
+| `layout_shape` | DBLive | ✅ pass |
+| `score_insert` | ScoreServiceLive | ✅ pass |
+| `score_fk_constraint` | ScoreServiceLive | ✅ pass |
+| `leaderboard_sort` | ScoreServiceLive | ✅ pass |
+| `test_log_insert` | DBLive | ✅ pass |
 
 ---
 
 ## What Comes Next
 
-The code and DB are complete. The remaining work is **inside Godot 4** (cannot be done via GitHub/Supabase MCP — requires local editor):
+All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine):
 
-1. **Register AutoLoads** in Project Settings > AutoLoad:
-   - `SupabaseClient` → `src/engine/SupabaseClient.gd`
-   - `InputManager` → `src/input/InputManager.gd`
-   - `ConfigLoader` → `src/config/ConfigLoader.gd`
-   - `ScoreService` → `src/engine/ScoreService.gd`
+### 1. Register AutoLoads
+Project Settings > AutoLoad — add in this order:
 
-2. **Build `res://scenes/Main.tscn`** — scene tree:
-   ```
-   Node (GameLoop.gd)
-   ├── Ball (RigidBody2D + Ball.gd)
-   ├── FlipperLeft (AnimatableBody2D + Flipper.gd)
-   ├── FlipperRight (AnimatableBody2D + Flipper.gd)
-   ├── DrainZone (Area2D + DrainZone.gd)
-   ├── Bumper_1..N (Area2D + Bumper.gd)
-   ├── Target_1..N (Area2D + Target.gd)
-   ├── TableBounds (StaticBody2D + TableBounds.gd)
-   └── UIRenderer (CanvasLayer + UIRenderer.gd)
-       ├── HUD/ScoreLabel
-       ├── HUD/BallCountLabel
-       ├── PauseOverlay
-       ├── GameOverOverlay/LeaderboardTable
-       ├── AttractScreen/HighScoreLabel
-       └── InitialsPrompt
-   ```
+| Name | Path |
+|---|---|
+| `SupabaseClient` | `res://src/engine/SupabaseClient.gd` |
+| `InputManager` | `res://src/input/InputManager.gd` |
+| `ConfigLoader` | `res://src/config/ConfigLoader.gd` |
+| `ScoreService` | `res://src/engine/ScoreService.gd` |
 
-3. **Configure InputMap** (Project Settings > Input Map):
-   - `flip_left`, `flip_right`, `launch`, `pause`, `tilt`
+### 2. Wire SupabaseClient at startup
+In `GameLoop._ready()`, add before all other calls:
+```gdscript
+var cfg = ConfigLoader.load_game_config("res://config/game.json")
+SupabaseClient.configure(cfg.get("supabase_url", ""), cfg.get("supabase_key", ""))
+```
 
-4. **Set display to portrait** (Project Settings > Display > Window):
-   - Width: 1080, Height: 1920, Orientation: Portrait
+### 3. Build `res://scenes/Main.tscn`
+Scene tree structure:
+```
+Node (GameLoop.gd)
+├── Ball               (RigidBody2D + Ball.gd)
+├── FlipperLeft        (AnimatableBody2D + Flipper.gd)
+├── FlipperRight       (AnimatableBody2D + Flipper.gd)
+├── DrainZone          (Area2D + DrainZone.gd)
+├── Bumper_1..N        (Area2D + Bumper.gd)
+├── Target_1..N        (Area2D + Target.gd)
+├── TableBounds        (StaticBody2D + TableBounds.gd)
+└── UIRenderer         (CanvasLayer + UIRenderer.gd)
+    ├── HUD/ScoreLabel
+    ├── HUD/BallCountLabel
+    ├── PauseOverlay
+    ├── GameOverOverlay/LeaderboardTable
+    ├── AttractScreen/HighScoreLabel
+    └── InitialsPrompt
+```
 
-5. **Wire `SupabaseClient.configure()`** — call at startup from `GameLoop._ready()` using values from `game.json`.
+### 4. Configure Project Settings
+- **InputMap:** add actions `flip_left`, `flip_right`, `launch`, `pause`, `tilt`
+- **Display > Window:** Width 1080, Height 1920, Orientation: Portrait
 
-6. **Run Godot smoke test** — attach `tests/integration/test_game_loop_smoke.gd` to a test scene and confirm all state transitions pass.
+### 5. Run Godot Smoke Test
+Attach `tests/integration/test_game_loop_smoke.gd` to a test scene and run. Confirms:
+- ATTRACT → PLAYING on LAUNCH
+- balls_remaining decrements on drain
+- GAME_OVER on last drain
 
-7. **Add sprites/audio assets** to `assets/` for ball, flippers, bumpers, targets, backgrounds.
+### 6. Add Visual & Audio Assets
+Place in `assets/`:
+- Sprites: ball, flipper (left/right), bumper (default + lit), target (active/inactive), table background
+- Audio: bumper hit SFX, flipper SFX, drain SFX, game over jingle
+
+### 7. Re-run Integration Tests After Scene Build
+```bash
+python tests/integration/run_db_tests.py \
+  --url https://hhyhulqngdkwsxhymmcd.supabase.co \
+  --key sb_publishable_haKvwV0M7KMj4Qz69M6WGg_KmIfU-aI \
+  --table-id 29bf4788-e1c3-4b62-9caf-fc2dfb33456f
+```
 
 ---
 
@@ -147,5 +187,7 @@ The code and DB are complete. The remaining work is **inside Godot 4** (cannot b
 - **Repo:** https://github.com/andredavisme/virtual-pinball-wall
 - **Supabase project:** https://supabase.com/dashboard/project/hhyhulqngdkwsxhymmcd
 - **Pseudocode:** `pseudocode/01-game-loop.md` through `06-score-service.md`
-- **Schema map:** `db/schema-map.md` (or `docs/`)
-- **Python test runner:** `python tests/integration/run_db_tests.py --url ... --key ... --table-id 29bf4788-e1c3-4b62-9caf-fc2dfb33456f`
+- **Schema map:** `db/` directory
+- **Supabase URL:** `https://hhyhulqngdkwsxhymmcd.supabase.co`
+- **Supabase publishable key:** `sb_publishable_haKvwV0M7KMj4Qz69M6WGg_KmIfU-aI`
+- **Active table UUID:** `29bf4788-e1c3-4b62-9caf-fc2dfb33456f`
