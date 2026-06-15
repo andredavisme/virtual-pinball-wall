@@ -1,5 +1,10 @@
 {
   "balls_per_game": 3,
-  "target_display_resolution": "1080x1920",
-  "active_table_id": "default"
+  "target_display_resolution": {
+    "width": 1080,
+    "height": 1920
+  },
+  "active_table_id": "",
+  "supabase_url": "https://hhyhulqngdkwsxhymmcd.supabase.co",
+  "supabase_key": ""
 }
