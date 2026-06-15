@@ -1,52 +1,56 @@
 # Pseudocode: Game Loop (M1)
 
-## File: `src/engine/game_loop`
+## Engine: Godot 4.x | File: `src/GameLoop.gd` (extends Node)
 
 ```
-INITIALIZE display (vertical resolution)
-LOAD table config from Supabase or local file
-INITIALIZE physics world (gravity, boundaries)
-INITIALIZE ball at launch position
-SET game_state = ATTRACT
+ON _ready():
+  LOAD table config from Supabase or local JSON
+  INITIALIZE physics world (Godot handles gravity via RigidBody2D)
+  INITIALIZE ball (RigidBody2D) at launch position
+  INITIALIZE flippers (AnimatableBody2D x2)
+  INITIALIZE bumpers/targets (Area2D + CollisionShape2D)
+  CONNECT InputAdapter signals
+  SET game_state = ATTRACT
+  CALL show_attract_screen()
 
-LOOP:
+ON _physics_process(delta):
   READ InputEvent from active InputAdapter
 
-  IF game_state == ATTRACT:
-    IF InputEvent == LAUNCH:
-      SET game_state = PLAYING
-      LAUNCH ball
+  MATCH game_state:
 
-  IF game_state == PLAYING:
-    IF InputEvent == LEFT_FLIPPER_DOWN:  activate left flipper
-    IF InputEvent == LEFT_FLIPPER_UP:    release left flipper
-    IF InputEvent == RIGHT_FLIPPER_DOWN: activate right flipper
-    IF InputEvent == RIGHT_FLIPPER_UP:   release right flipper
-    IF InputEvent == TILT:               trigger tilt penalty
-    IF InputEvent == PAUSE:              SET game_state = PAUSED
+    ATTRACT:
+      IF InputEvent == LAUNCH:
+        SET game_state = PLAYING
+        CALL launch_ball()
 
-    UPDATE physics (ball position, velocity, collisions)
-    CHECK collisions (bumpers, targets, flippers, walls, drain)
-    UPDATE score
+    PLAYING:
+      IF InputEvent == LEFT_FLIPPER_DOWN:  CALL flipper_left.activate()
+      IF InputEvent == LEFT_FLIPPER_UP:    CALL flipper_left.release()
+      IF InputEvent == RIGHT_FLIPPER_DOWN: CALL flipper_right.activate()
+      IF InputEvent == RIGHT_FLIPPER_UP:   CALL flipper_right.release()
+      IF InputEvent == TILT:               CALL trigger_tilt()
+      IF InputEvent == PAUSE:              SET game_state = PAUSED
 
-    IF ball drained AND balls_remaining == 0:
-      SET game_state = GAME_OVER
-      POST score to Supabase
+      # Physics update handled automatically by Godot engine each tick
+      # Collision signals emitted by Area2D nodes (bumpers, drain, targets)
 
-    IF ball drained AND balls_remaining > 0:
-      DECREMENT balls_remaining
-      RESET ball to launch position
+      IF drain_zone.body_entered(ball):
+        DECREMENT balls_remaining
+        IF balls_remaining == 0:
+          SET game_state = GAME_OVER
+          CALL post_score_to_supabase(current_score)
+        ELSE:
+          CALL reset_ball_to_launch_position()
 
-  IF game_state == PAUSED:
-    IF InputEvent == PAUSE: SET game_state = PLAYING
+    PAUSED:
+      IF InputEvent == PAUSE: SET game_state = PLAYING
 
-  IF game_state == GAME_OVER:
-    DISPLAY score + leaderboard
-    WAIT for input
-    RESET game
-    SET game_state = ATTRACT
+    GAME_OVER:
+      CALL show_leaderboard()
+      IF InputEvent == any:
+        CALL reset_game()
+        SET game_state = ATTRACT
 
-  RENDER frame to vertical display
-  SLEEP until next frame tick
-END LOOP
+# Godot renders each frame automatically via SceneTree
+# No manual SLEEP or RENDER call needed
 ```
