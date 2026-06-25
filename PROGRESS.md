@@ -55,6 +55,13 @@ This file is the canonical handoff document. At the start of any new session, re
 - Includes 8 checkpoints and troubleshooting sections for each major step
 - Updated `PROGRESS.md` (this file)
 
+### Session 3 — 2026-06-25
+- Created `docs/asset-spec.md` — full asset specification for all sprites, sounds, and fonts
+- Spec covers 13 sprites, 10 audio files, and 3 fonts with sizes, formats, styles, pivot notes, and usage context
+- Includes font recommendations (all OFL-licensed Google Fonts) and a 26-item completion checklist
+- Includes placeholder strategy and Godot import setting notes
+- Updated `PROGRESS.md` (this file)
+
 ---
 
 ## What Was Built
@@ -100,6 +107,7 @@ This file is the canonical handoff document. At the start of any new session, re
 | File | Notes |
 |---|---|
 | `docs/godot-setup-guide.md` | Beginner-friendly Godot 4 editor setup guide with 8 checkpoints |
+| `docs/asset-spec.md` | Full asset specification — 13 sprites, 10 sounds, 3 fonts; includes checklist and placeholder notes |
 | `docs/file-catalog.md` | Project file catalog |
 | `docs/milestones.md` | Project milestones |
 
@@ -133,7 +141,13 @@ This file is the canonical handoff document. At the start of any new session, re
 
 All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine). Follow `docs/godot-setup-guide.md` for step-by-step instructions.
 
-### 1. Register AutoLoads
+### 1. Source / Create Assets
+See `docs/asset-spec.md` for full details on all 26 required assets.
+- Download fonts (all free, OFL-licensed) from Google Fonts
+- Create or source sprites (use `PlaceholderTexture2D` in Godot for initial smoke test)
+- Source or create audio SFX and music loops
+
+### 2. Register AutoLoads
 Project Settings > AutoLoad — add in this order:
 
 | Name | Path |
@@ -143,30 +157,25 @@ Project Settings > AutoLoad — add in this order:
 | `ConfigLoader` | `res://src/config/ConfigLoader.gd` |
 | `ScoreService` | `res://src/engine/ScoreService.gd` |
 
-### 2. Wire SupabaseClient at startup
+### 3. Wire SupabaseClient at startup
 In `GameLoop._ready()`, add before all other calls:
 ```gdscript
 var cfg = ConfigLoader.load_game_config("res://config/game.json")
 SupabaseClient.configure(cfg.get("supabase_url", ""), cfg.get("supabase_key", ""))
 ```
 
-### 3. Build `res://scenes/Main.tscn`
+### 4. Build `res://scenes/Main.tscn`
 See `docs/godot-setup-guide.md` Part 5 for the full scene tree.
 
-### 4. Configure Project Settings
+### 5. Configure Project Settings
 - **InputMap:** add actions `flip_left`, `flip_right`, `launch`, `pause`, `tilt`
 - **Display > Window:** Width 1080, Height 1920, Orientation: Portrait
 
-### 5. Run Godot Smoke Test
+### 6. Run Godot Smoke Test
 Attach `tests/integration/test_game_loop_smoke.gd` to a test scene and run. Confirms:
 - ATTRACT → PLAYING on LAUNCH
 - balls_remaining decrements on drain
 - GAME_OVER on last drain
-
-### 6. Add Visual & Audio Assets
-Place in `assets/`:
-- Sprites: ball, flipper (left/right), bumper (default + lit), target (active/inactive), table background
-- Audio: bumper hit SFX, flipper SFX, drain SFX, game over jingle
 
 ### 7. Re-run Integration Tests After Scene Build
 ```bash
@@ -183,6 +192,7 @@ python tests/integration/run_db_tests.py \
 - **Repo:** https://github.com/andredavisme/virtual-pinball-wall
 - **Supabase project:** https://supabase.com/dashboard/project/hhyhulqngdkwsxhymmcd
 - **Godot setup guide:** `docs/godot-setup-guide.md`
+- **Asset spec:** `docs/asset-spec.md`
 - **Pseudocode:** `pseudocode/01-game-loop.md` through `06-score-service.md`
 - **Schema map:** `db/` directory
 - **Supabase URL:** `https://hhyhulqngdkwsxhymmcd.supabase.co`
