@@ -121,16 +121,30 @@ Godot 4 uses `.ttf` / `.otf` files imported as `FontFile` resources.
 | `assets/fonts/score_font.ttf` | Score display, ball counter in HUD | Bold, wide, arcade-style (e.g., Press Start 2P, Orbitron Bold) |
 | `assets/fonts/leaderboard_font.ttf` | Leaderboard name/score rows | Monospace or semi-condensed for alignment |
 | `assets/fonts/ui_font.ttf` | General UI labels, attract screen prompts | Clean sans-serif |
+| `assets/fonts/ui_font_dyslexic.ttf` | *(Optional)* Accessibility alternative for `ui_font.ttf` | Dyslexia-friendly weighted letterforms |
 
-### Recommended Free Fonts (Google Fonts / OFL License)
+### Recommended Free Fonts (OFL License)
 
 | Asset | Suggested Font | URL |
 |---|---|---|
 | `score_font.ttf` | Press Start 2P | https://fonts.google.com/specimen/Press+Start+2P |
 | `leaderboard_font.ttf` | Share Tech Mono | https://fonts.google.com/specimen/Share+Tech+Mono |
 | `ui_font.ttf` | Rajdhani Bold | https://fonts.google.com/specimen/Rajdhani |
+| `ui_font_dyslexic.ttf` *(optional)* | OpenDyslexic | https://opendyslexic.org/ |
 
-All three are OFL (Open Font License) — free for commercial and personal use.
+All fonts are OFL (Open Font License) — free for commercial and personal use.
+
+### Accessibility Font Swap
+
+To enable the OpenDyslexic variant at runtime, `UIRenderer.gd` can load `ui_font_dyslexic.ttf` instead of `ui_font.ttf` based on a player preference flag. A suggested config key in `game.json`:
+
+```json
+"accessibility": {
+  "dyslexic_font": false
+}
+```
+
+When `dyslexic_font` is `true`, substitute `ui_font_dyslexic.ttf` wherever `ui_font.ttf` is applied in the Theme.
 
 ---
 
@@ -169,6 +183,7 @@ Use this to track completion before first Godot smoke test with full scene:
 - [ ] `score_font.ttf`
 - [ ] `leaderboard_font.ttf`
 - [ ] `ui_font.ttf`
+- [ ] `ui_font_dyslexic.ttf` *(optional — accessibility)*
 
 ---
 
