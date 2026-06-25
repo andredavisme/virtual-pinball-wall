@@ -13,10 +13,10 @@ var _game_loop: Node = null
 func run() -> Array:
 	_results = []
 	# Load the main scene as a child for isolated testing
-	var scene = load("res://scenes/Main.tscn")
+	var scene = load("res://src/scenes/Main.tscn")
 	if scene == null:
 		_results.append(_skip("all",
-			"res://scenes/Main.tscn not found — create scene before running smoke test"))
+			"res://src/scenes/Main.tscn not found — confirm scene exists before running smoke test"))
 		return _results
 	_game_loop = scene.instantiate()
 	add_child(_game_loop)

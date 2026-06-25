@@ -62,6 +62,8 @@ This file is the canonical handoff document. At the start of any new session, re
 - Created `docs/placeholder-setup.md` — guide covering both Option A (generator script) and Option B (Godot `PlaceholderTexture2D`) approaches
 - Updated `config/game.json` — added `accessibility.dyslexic_font` flag (default `false`)
 - Updated `src/ui/UIRenderer.gd` — wired `_apply_accessibility_font()` in `_ready()`; reads flag from `game.json` via ConfigLoader; applies `ui_font_dyslexic.ttf` theme override to all static labels and dynamically created leaderboard rows; graceful fallback with `push_warning()` if font file missing
+- Created `src/scenes/Main.tscn` — fully wired Godot 4 scene file; includes all game nodes (Ball, FlipperLeft/Right, Bumper×3, Target×2, DrainZone, TableBounds, UIRenderer) with collision shapes, physics material, and correct script references; no manual node building required in editor
+- Fixed `tests/integration/test_game_loop_smoke.gd` — corrected scene load path from `res://scenes/Main.tscn` to `res://src/scenes/Main.tscn`
 - Updated `PROGRESS.md` (this file)
 
 ---
@@ -88,6 +90,11 @@ This file is the canonical handoff document. At the start of any new session, re
 | `src/engine/ScoreService.gd` | AutoLoad — `post_score()` + `get_leaderboard()` via Supabase REST |
 | `src/engine/SupabaseClient.gd` | AutoLoad — shared URL + key + headers |
 
+### Scenes (`src/scenes/`)
+| File | Notes |
+|---|---|
+| `src/scenes/Main.tscn` | Fully wired main scene — all nodes, collision shapes, physics material, scripts pre-attached |
+
 ### Config (`config/`)
 | File | Notes |
 |---|---|
@@ -107,7 +114,7 @@ This file is the canonical handoff document. At the start of any new session, re
 | `tests/integration/test_db_live.gd` | Live Supabase INSERT/SELECT/DELETE |
 | `tests/integration/test_config_roundtrip.gd` | game.json → Supabase table config round-trip |
 | `tests/integration/test_score_service_live.gd` | Full score POST + leaderboard GET cycle |
-| `tests/integration/test_game_loop_smoke.gd` | Scene instantiation + state machine simulation |
+| `tests/integration/test_game_loop_smoke.gd` | Scene instantiation + state machine simulation (**path fixed**) |
 | `tests/integration/run_db_tests.py` | Standalone Python runner (no Godot required) |
 
 ### Documentation (`docs/`)
@@ -147,15 +154,15 @@ This file is the canonical handoff document. At the start of any new session, re
 
 ## What Comes Next
 
-All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine). Follow `docs/godot-setup-guide.md` for step-by-step instructions.
+Remaining work requires the **Godot 4 editor** on your local machine.
 
-### 1. Source / Create Assets
-See `docs/asset-spec.md` and `docs/placeholder-setup.md`.
-- Run `python tools/generate_placeholders.py` (requires Pillow) to generate all 13 placeholder sprites
-- Download fonts (OFL-licensed): Press Start 2P, Share Tech Mono, Rajdhani Bold, OpenDyslexic (optional)
-- Source or create audio SFX and music loops
+### 1. Get the Project Running Locally
+1. Clone or re-pull the repo (all scene and config files are now committed)
+2. Run `python tools/generate_placeholders.py` to generate placeholder sprites
+3. Download fonts from Google Fonts (Press Start 2P, Share Tech Mono, Rajdhani Bold) — place in `assets/fonts/`
+4. Open `project.godot` in Godot 4
 
-### 2. Register AutoLoads
+### 2. Register AutoLoads (one-time editor setup)
 Project Settings > AutoLoad — add in this order:
 
 | Name | Path |
@@ -165,27 +172,28 @@ Project Settings > AutoLoad — add in this order:
 | `ConfigLoader` | `res://src/config/ConfigLoader.gd` |
 | `ScoreService` | `res://src/engine/ScoreService.gd` |
 
-### 3. Wire SupabaseClient at startup
-In `GameLoop._ready()`, add before all other calls:
-```gdscript
-var cfg = ConfigLoader.load_game_config("res://config/game.json")
-SupabaseClient.configure(cfg.get("supabase_url", ""), cfg.get("supabase_key", ""))
+### 3. Configure Project Settings (one-time editor setup)
+- **InputMap:** add actions `flip_left` (Z), `flip_right` (/), `launch` (Space), `pause` (Escape), `tilt` (T)
+- **Display > Window:** Width 1080, Height 1920, Orientation: Portrait
+- **Application > Run > Main Scene:** `res://src/scenes/Main.tscn`
+
+### 4. Run the Godot Smoke Test
+Create a test scene, attach `tests/integration/test_game_loop_smoke.gd`, press **F6**.
+
+Expected Output panel results:
+```
+[PASS] initial_state_is_attract
+[PASS] score_zero_on_start
+[PASS] balls_remaining_equals_config
+[PASS] launch_transitions_to_playing
+[PASS] drain_decrements_balls
+[PASS] game_over_when_last_ball_drained
 ```
 
-### 4. Build `res://scenes/Main.tscn`
-See `docs/godot-setup-guide.md` Part 5 for the full scene tree.
+### 5. Run Full Game (F5)
+Press Space to launch, Z / / for flippers. Confirm attract screen → play → game over flow.
 
-### 5. Configure Project Settings
-- **InputMap:** add actions `flip_left`, `flip_right`, `launch`, `pause`, `tilt`
-- **Display > Window:** Width 1080, Height 1920, Orientation: Portrait
-
-### 6. Run Godot Smoke Test
-Attach `tests/integration/test_game_loop_smoke.gd` to a test scene and run. Confirms:
-- ATTRACT → PLAYING on LAUNCH
-- balls_remaining decrements on drain
-- GAME_OVER on last drain
-
-### 7. Re-run Integration Tests After Scene Build
+### 6. Re-run Integration Tests
 ```bash
 python tests/integration/run_db_tests.py \
   --url https://hhyhulqngdkwsxhymmcd.supabase.co \
@@ -193,12 +201,16 @@ python tests/integration/run_db_tests.py \
   --table-id 29bf4788-e1c3-4b62-9caf-fc2dfb33456f
 ```
 
+### 7. Replace Placeholder Assets
+Once the game runs with placeholders, source final sprites, sounds, and fonts per `docs/asset-spec.md`.
+
 ---
 
 ## Key References
 
 - **Repo:** https://github.com/andredavisme/virtual-pinball-wall
 - **Supabase project:** https://supabase.com/dashboard/project/hhyhulqngdkwsxhymmcd
+- **Main scene:** `src/scenes/Main.tscn`
 - **Godot setup guide:** `docs/godot-setup-guide.md`
 - **Asset spec:** `docs/asset-spec.md`
 - **Placeholder setup:** `docs/placeholder-setup.md`
