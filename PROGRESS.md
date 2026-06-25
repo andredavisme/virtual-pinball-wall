@@ -56,10 +56,12 @@ This file is the canonical handoff document. At the start of any new session, re
 - Updated `PROGRESS.md` (this file)
 
 ### Session 3 — 2026-06-25
-- Created `docs/asset-spec.md` — full asset specification for all sprites, sounds, and fonts
-- Spec covers 13 sprites, 10 audio files, and 3 fonts with sizes, formats, styles, pivot notes, and usage context
-- Includes font recommendations (all OFL-licensed Google Fonts) and a 26-item completion checklist
-- Includes placeholder strategy and Godot import setting notes
+- Created `docs/asset-spec.md` — full asset specification: 13 sprites, 10 sounds, 3 fonts with sizes, formats, styles, pivot notes, usage context, and a 26-item completion checklist
+- Added OpenDyslexic as an optional OFL-licensed accessibility font (`ui_font_dyslexic.ttf`) alongside Rajdhani Bold (`ui_font.ttf`)
+- Created `tools/generate_placeholders.py` — Pillow-based script that generates all 13 placeholder PNGs at spec-correct sizes into `assets/sprites/`
+- Created `docs/placeholder-setup.md` — guide covering both Option A (generator script) and Option B (Godot `PlaceholderTexture2D`) approaches
+- Updated `config/game.json` — added `accessibility.dyslexic_font` flag (default `false`)
+- Updated `src/ui/UIRenderer.gd` — wired `_apply_accessibility_font()` in `_ready()`; reads flag from `game.json` via ConfigLoader; applies `ui_font_dyslexic.ttf` theme override to all static labels and dynamically created leaderboard rows; graceful fallback with `push_warning()` if font file missing
 - Updated `PROGRESS.md` (this file)
 
 ---
@@ -81,7 +83,7 @@ This file is the canonical handoff document. At the start of any new session, re
 | `src/input/GPIOAdapter.gd` | GPIO pin → InputEvent mapping (Raspberry Pi) |
 | `src/input/BluetoothAdapter.gd` | BT packet → InputEvent mapping |
 | `src/input/InputManager.gd` | AutoLoad — manages active adapter |
-| `src/ui/UIRenderer.gd` | CanvasLayer — HUD, overlays, leaderboard display |
+| `src/ui/UIRenderer.gd` | CanvasLayer — HUD, overlays, leaderboard; **accessibility font wiring added** |
 | `src/config/ConfigLoader.gd` | AutoLoad — loads `game.json` + fetches table config from Supabase |
 | `src/engine/ScoreService.gd` | AutoLoad — `post_score()` + `get_leaderboard()` via Supabase REST |
 | `src/engine/SupabaseClient.gd` | AutoLoad — shared URL + key + headers |
@@ -89,8 +91,13 @@ This file is the canonical handoff document. At the start of any new session, re
 ### Config (`config/`)
 | File | Notes |
 |---|---|
-| `config/game.json` | `active_table_id`, `supabase_url`, `supabase_key`, `balls_per_game` — **fully wired** |
+| `config/game.json` | `active_table_id`, `supabase_url`, `supabase_key`, `balls_per_game`, `accessibility.dyslexic_font` — **fully wired** |
 | `config/input.json` | Default: keyboard adapter |
+
+### Tools (`tools/`)
+| File | Notes |
+|---|---|
+| `tools/generate_placeholders.py` | Generates all 13 placeholder sprites into `assets/sprites/` (requires Pillow) |
 
 ### Tests (`tests/`)
 | Path | Type |
@@ -107,7 +114,8 @@ This file is the canonical handoff document. At the start of any new session, re
 | File | Notes |
 |---|---|
 | `docs/godot-setup-guide.md` | Beginner-friendly Godot 4 editor setup guide with 8 checkpoints |
-| `docs/asset-spec.md` | Full asset specification — 13 sprites, 10 sounds, 3 fonts; includes checklist and placeholder notes |
+| `docs/asset-spec.md` | Full asset specification — 13 sprites, 10 sounds, 3 fonts + OpenDyslexic option; includes checklist |
+| `docs/placeholder-setup.md` | Placeholder sprite setup guide — generator script and Godot PlaceholderTexture2D approaches |
 | `docs/file-catalog.md` | Project file catalog |
 | `docs/milestones.md` | Project milestones |
 
@@ -142,9 +150,9 @@ This file is the canonical handoff document. At the start of any new session, re
 All MCP-accessible work is complete. The remaining work requires **Godot 4 editor** (local machine). Follow `docs/godot-setup-guide.md` for step-by-step instructions.
 
 ### 1. Source / Create Assets
-See `docs/asset-spec.md` for full details on all 26 required assets.
-- Download fonts (all free, OFL-licensed) from Google Fonts
-- Create or source sprites (use `PlaceholderTexture2D` in Godot for initial smoke test)
+See `docs/asset-spec.md` and `docs/placeholder-setup.md`.
+- Run `python tools/generate_placeholders.py` (requires Pillow) to generate all 13 placeholder sprites
+- Download fonts (OFL-licensed): Press Start 2P, Share Tech Mono, Rajdhani Bold, OpenDyslexic (optional)
 - Source or create audio SFX and music loops
 
 ### 2. Register AutoLoads
@@ -193,6 +201,8 @@ python tests/integration/run_db_tests.py \
 - **Supabase project:** https://supabase.com/dashboard/project/hhyhulqngdkwsxhymmcd
 - **Godot setup guide:** `docs/godot-setup-guide.md`
 - **Asset spec:** `docs/asset-spec.md`
+- **Placeholder setup:** `docs/placeholder-setup.md`
+- **Placeholder generator:** `tools/generate_placeholders.py`
 - **Pseudocode:** `pseudocode/01-game-loop.md` through `06-score-service.md`
 - **Schema map:** `db/` directory
 - **Supabase URL:** `https://hhyhulqngdkwsxhymmcd.supabase.co`
