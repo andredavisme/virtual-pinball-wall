@@ -5,6 +5,10 @@
 
 extends CanvasLayer
 
+# Font paths
+const FONT_UI_DEFAULT   := "res://assets/fonts/ui_font.ttf"
+const FONT_UI_DYSLEXIC  := "res://assets/fonts/ui_font_dyslexic.ttf"
+
 # HUD labels (assign in Inspector)
 @onready var score_label: Label       = $HUD/ScoreLabel
 @onready var ball_count_label: Label  = $HUD/BallCountLabel
@@ -25,6 +29,41 @@ func _ready() -> void:
 	game_over_overlay.visible = false
 	attract_screen.visible    = false
 	initials_prompt.visible   = false
+
+	_apply_accessibility_font()
+
+func _apply_accessibility_font() -> void:
+	# Read accessibility.dyslexic_font from game.json via ConfigLoader.
+	# If true and ui_font_dyslexic.ttf exists, apply it as a Theme override
+	# to all Label nodes managed by this CanvasLayer.
+	var cfg: Dictionary = ConfigLoader.load_game_config("res://config/game.json")
+	var a11y: Dictionary = cfg.get("accessibility", {})
+	var use_dyslexic: bool = a11y.get("dyslexic_font", false)
+
+	if not use_dyslexic:
+		return
+
+	if not ResourceLoader.exists(FONT_UI_DYSLEXIC):
+		push_warning("UIRenderer: dyslexic_font=true but '%s' not found. Falling back to default UI font." % FONT_UI_DYSLEXIC)
+		return
+
+	var dyslexic_font: FontFile = load(FONT_UI_DYSLEXIC)
+	var ui_labels: Array[Label] = [
+		score_label,
+		ball_count_label,
+		high_score_label,
+	]
+
+	for label in ui_labels:
+		if label != null:
+			label.add_theme_font_override("font", dyslexic_font)
+
+	# Leaderboard rows are dynamically created — store flag for _populate_leaderboard
+	_use_dyslexic_font = true
+	_dyslexic_font_res = dyslexic_font
+
+var _use_dyslexic_font: bool = false
+var _dyslexic_font_res: FontFile = null
 
 func update_frame(
 		game_state,
@@ -77,6 +116,8 @@ func _populate_leaderboard(leaderboard: Array) -> void:
 		child.queue_free()
 	# Add a label row per entry
 	for entry in leaderboard:
-		var row = Label.new()
+		var row := Label.new()
 		row.text = "%s  %d" % [entry.get("player_initials", "???"), entry.get("score", 0)]
+		if _use_dyslexic_font and _dyslexic_font_res != null:
+			row.add_theme_font_override("font", _dyslexic_font_res)
 		leaderboard_table.add_child(row)
