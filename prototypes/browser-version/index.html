@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Pinball Wall</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Matter.js physics via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <!-- Supabase JS via CDN (optional leaderboard) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <!-- HUD: score + balls -->
+  <div id="hud">
+    <div id="hud-score">
+      <span class="hud-label">SCORE</span>
+      <span id="score-display">0</span>
+    </div>
+    <div id="hud-balls">
+      <span class="hud-label">BALLS</span>
+      <span id="balls-display">3</span>
+    </div>
+  </div>
+
+  <!-- Game Canvas (portrait 9:16) -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Touch controls for mobile/wall-mount -->
+  <div id="touch-controls">
+    <button id="btn-left"  class="flipper-btn" aria-label="Left flipper">◄ LEFT</button>
+    <button id="btn-right" class="flipper-btn" aria-label="Right flipper">RIGHT ►</button>
+  </div>
+
+  <!-- ATTRACT overlay -->
+  <div id="overlay-attract" class="overlay" role="dialog" aria-label="Attract screen">
+    <div class="overlay-inner">
+      <h1 class="game-title">WALL PINBALL</h1>
+      <p class="attract-sub">Press <kbd>Space</kbd> or tap to launch</p>
+      <p id="attract-hiscore" class="hiscore-line"></p>
+    </div>
+  </div>
+
+  <!-- PAUSED overlay -->
+  <div id="overlay-paused" class="overlay hidden" role="dialog" aria-label="Game paused">
+    <div class="overlay-inner">
+      <h2>PAUSED</h2>
+      <p>Press <kbd>P</kbd> to resume</p>
+    </div>
+  </div>
+
+  <!-- GAME OVER overlay -->
+  <div id="overlay-gameover" class="overlay hidden" role="dialog" aria-label="Game over">
+    <div class="overlay-inner">
+      <h2>GAME OVER</h2>
+      <p id="final-score-label"></p>
+      <div id="initials-form">
+        <label for="initials-input">Enter Initials (3 chars)</label>
+        <input id="initials-input" maxlength="3" placeholder="AAA" autocomplete="off" spellcheck="false">
+        <button id="btn-submit-initials">SUBMIT</button>
+      </div>
+      <div id="leaderboard-panel">
+        <h3>TOP SCORES</h3>
+        <ol id="leaderboard-list"></ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game modules (ES Modules) -->
+  <script type="module" src="js/engine.js"></script>
+</body>
+</html>
